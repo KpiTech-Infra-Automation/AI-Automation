@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI TECH CORPORATION - Enterprise CRM & Billing Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            950: '#050814',
+                            900: '#0B132B',
+                            800: '#1C2541',
+                            700: '#2A3A5E',
+                            600: '#3A506B'
+                        },
+                        cyan: {
+                            accent: '#48CAE4',
+                            glow: '#00B4D8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050814;
+            /* Dark background grid dot pattern matching brand style */
+            background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #E2E8F0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B132B;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A3A5E;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00B4D8;
+        }
+
+        .glass-card {
+            background: rgba(11, 19, 43, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+        }
+        .tab-active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60A5FA;
+            border-left: 4px solid #3B82F6;
+        }
+
+        /* BRAND GRADIENT TEXT & ICON UTILITIES */
+        .tech-gradient-text {
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .brand-logo-icon {
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        /* PRINT STYLESHEET FOR OFFICIAL INVOICE GENERATION */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-invoice-area, #printable-invoice-area * {
+                visibility: visible;
+            }
+            #printable-invoice-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: #0f172a !important;
+                padding: 32px !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-text-dark {
+                color: #0f172a !important;
+            }
+            .print-text-muted {
+                color: #475569 !important;
+            }
+            .print-border {
+                border-color: #cbd5e1 !important;
+            }
+            .print-bg-light {
+                background-color: #f8fafc !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- ========================================== -->
+    <!-- 1. LOGIN & SECURITY VIEW CONTAINER         -->
+    <!-- ========================================== -->
+    <div id="login-screen" class="fixed inset-0 bg-[#050814] z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <!-- Brand Banner Header -->
+            <div class="flex items-center justify-center gap-4 mb-8">
+                <div class="w-14 h-14 rounded-2xl brand-logo-icon flex items-center justify-center shrink-0">
+                    <i data-lucide="layers" class="w-8 h-8 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-wider text-white leading-none">
+                        KPI <span class="tech-gradient-text">TECH</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400 font-semibold tracking-[0.25em] uppercase mt-1">CORPORATION</p>
+                </div>
+            </div>
+
+            <!-- LOGIN CARD FORM -->
+            <div id="login-card" class="glass-card rounded-2xl p-8 shadow-2xl border border-slate-800">
+                <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-800">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-blue-400"></i> Corporate Sign In
+                    </h2>
+                    <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2.5 py-1 rounded-full border border-blue-500/20 font-mono">v3.8 Production</span>
+                </div>
+
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Corporate Email</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="email" id="login-email" required value="a.morgan@kpitech.com" class="w-full bg-navy-900 border border-slate-700/80 rounded-lg pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                        <div class="relative">
+                            <i data-lucide="lock" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="password" id="login-password" required value="••••••••••••" class="w-full bg-navy-900 border border-slate-700/80 rounded-lg pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Access Role Context</label>
+                        <div class="relative">
+                            <i data-lucide="user-check" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <select id="login-role" class="w-full bg-navy-900 border border-slate-700/80 rounded-lg pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all">
+                                <option value="Administrator">Administrator (Global Access)</option>
+                                <option value="Finance Manager">Finance Manager (Billing & Invoicing)</option>
+                                <option value="Sales Lead">Sales Lead (Client Management)</option>
+                                <option value="DevOps Lead">DevOps Lead (Infrastructure Services)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-400">
+                            <input type="checkbox" id="login-remember" checked class="rounded border-slate-700 bg-navy-900 text-blue-500 focus:ring-0">
+                            Remember session
+                        </label>
+                        <button type="button" onclick="toggleForgotPassword(true)" class="text-xs text-blue-400 hover:underline">Forgot password?</button>
+                    </div>
+
+                    <button type="submit" class="w-full mt-2 brand-logo-icon hover:opacity-90 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="log-in" class="w-4 h-4"></i> Authenticate & Enter Portal
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-slate-800 text-center">
+                    <p class="text-[11px] text-slate-500">KPI TECH CORPORATION • Restricted Security Domain</p>
+                </div>
+            </div>
+
+            <!-- SELF-SERVICE FORGOT / RESET PASSWORD CARD -->
+            <div id="forgot-card" class="glass-card rounded-2xl p-8 shadow-2xl border border-slate-800 hidden">
+                <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-800">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                        <i data-lucide="key-round" class="w-4 h-4 text-purple-400"></i> Reset Password Request
+                    </h2>
+                    <button type="button" onclick="toggleForgotPassword(false)" class="text-slate-400 hover:text-white">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form onsubmit="handleForgotPasswordSubmit(event)" class="space-y-4">
+                    <p class="text-xs text-slate-400">Enter your registered corporate email to receive a secure password reset token and verification link.</p>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Corporate Email</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="email" id="reset-email" required placeholder="a.morgan@kpitech.com" class="w-full bg-navy-900 border border-slate-700/80 rounded-lg pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-all">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4"></i> Dispatch Token & Link
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-slate-800 text-center">
+                    <button type="button" onclick="toggleForgotPassword(false)" class="text-xs text-slate-400 hover:text-white flex items-center justify-center gap-1 mx-auto">
+                        <i data-lucide="arrow-left" class="w-3 h-3"></i> Back to Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN APPLICATION PORTAL (AUTHENTICATED) -->
+    <!-- ========================================== -->
+    <div id="main-portal" class="h-screen flex overflow-hidden hidden">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-64 bg-[#080d1e] border-r border-slate-800 flex flex-col justify-between hidden md:flex shrink-0">
+            <div>
+                <!-- Logo Header Section -->
+                <div class="p-5 flex items-center gap-3 border-b border-slate-800/80">
+                    <div class="w-10 h-10 rounded-xl brand-logo-icon flex items-center justify-center shrink-0">
+                        <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-base tracking-wider text-white leading-none">
+                            KPI <span class="tech-gradient-text">TECH</span>
+                        </h1>
+                        <p class="text-[10px] text-slate-400 font-semibold tracking-[0.25em] uppercase mt-1">CORPORATION</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="mt-6 space-y-1 px-3">
+                    <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-active flex items-center gap-3 px-4 py-3 text-sm rounded-r-xl transition-all hover:text-white">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                    </a>
+                    <a href="#" onclick="switchTab('customers')" id="nav-customers" class="flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:bg-navy-800 rounded-r-xl transition-all hover:text-white">
+                        <i data-lucide="building-2" class="w-4 h-4"></i> Customers & Clients
+                    </a>
+                    <a href="#" onclick="switchTab('invoices')" id="nav-invoices" class="flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:bg-navy-800 rounded-r-xl transition-all hover:text-white">
+                        <i data-lucide="receipt" class="w-4 h-4"></i> Billing & Ledger
+                    </a>
+                    <a href="#" onclick="switchTab('create-inv-tab')" id="nav-create-inv-tab" class="flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:bg-navy-800 rounded-r-xl transition-all hover:text-white">
+                        <i data-lucide="file-plus-2" class="w-4 h-4"></i> Invoice Studio
+                    </a>
+                    <a href="#" onclick="switchTab('users')" id="nav-users" class="flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:bg-navy-800 rounded-r-xl transition-all hover:text-white">
+                        <i data-lucide="users" class="w-4 h-4"></i> User Management
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Dynamic Session Profile Footer & Logout -->
+            <div class="p-4 border-t border-slate-800 m-3 rounded-xl bg-navy-800/50 flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs" id="user-avatar">
+                        AM
+                    </div>
+                    <div class="overflow-hidden">
+                        <p id="user-display-name" class="text-xs font-bold truncate text-white">Alex Morgan</p>
+                        <p id="user-display-role" class="text-[11px] text-purple-400 font-medium truncate">Administrator</p>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="w-full bg-navy-900 hover:bg-rose-900/30 hover:text-rose-400 border border-slate-700/60 text-slate-300 text-xs py-1.5 rounded-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="power" class="w-3.5 h-3.5"></i> End Session
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTAINER -->
+        <div class="flex-1 flex flex-col h-full overflow-hidden">
+
+            <!-- TOP NAVBAR -->
+            <header class="h-16 bg-[#080d1e] border-b border-slate-800 flex items-center justify-between px-6 shrink-0">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden text-slate-400 hover:text-white" onclick="toggleMobileMenu()">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div class="relative w-64 md:w-96">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="text" id="global-search" oninput="handleGlobalSearch(this.value)" placeholder="Search clients, GSTIN, users, invoice #..." class="w-full bg-navy-800 border border-slate-700/60 rounded-lg pl-9 pr-4 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-400 transition-all">
+                    </div>
+                </div>
+
+                <!-- Action Shortcuts -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button onclick="switchTab('create-inv-tab')" class="brand-logo-icon hover:opacity-90 text-white font-medium text-xs px-3 py-2 rounded-lg flex items-center gap-2 transition-all shadow-md">
+                        <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden sm:inline">New Invoice</span>
+                    </button>
+                    <button onclick="openModal('addCustomerModal')" class="bg-navy-800 hover:bg-navy-700 border border-slate-700 text-slate-200 font-medium text-xs px-3 py-2 rounded-lg flex items-center gap-2 transition-all">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i> <span class="hidden sm:inline">Add Client</span>
+                    </button>
+                    <button onclick="openModal('addUserModal')" class="bg-navy-800 hover:bg-navy-700 border border-slate-700 text-slate-200 font-medium text-xs px-3 py-2 rounded-lg flex items-center gap-2 transition-all">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i> <span class="hidden sm:inline">Add User</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- MAIN WORKSPACE -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+
+                <!-- DASHBOARD METRICS CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Card 1 -->
+                    <div class="glass-card glass-card-hover rounded-xl p-5 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Revenue</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                                <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 class="text-2xl font-bold text-white" id="stat-total-revenue">$1,842,900</h3>
+                            <p class="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> +16.8% from last month
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="glass-card glass-card-hover rounded-xl p-5 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Invoices Pending</span>
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                <i data-lucide="clock" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 class="text-2xl font-bold text-white" id="stat-pending-val">$128,450</h3>
+                            <p class="text-xs text-amber-400 mt-1 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> <span id="stat-pending-count">2</span> Action required
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="glass-card glass-card-hover rounded-xl p-5 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Clients</span>
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                <i data-lucide="building-2" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 class="text-2xl font-bold text-white" id="stat-clients-count">4</h3>
+                            <p class="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> 100% SLA Active
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="glass-card glass-card-hover rounded-xl p-5 transition-all">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active System Users</span>
+                            <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+                                <i data-lucide="shield" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h3 class="text-2xl font-bold text-white" id="stat-users-count">4</h3>
+                            <p class="text-xs text-purple-400 mt-1 flex items-center gap-1">
+                                <i data-lucide="lock" class="w-3.5 h-3.5"></i> RBAC Security Enforced
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 1: DASHBOARD OVERVIEW -->
+                <div id="tab-content-dashboard" class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Revenue Chart -->
+                        <div class="lg:col-span-2 glass-card rounded-xl p-5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="font-semibold text-white flex items-center gap-2">
+                                    <i data-lucide="line-chart" class="w-4 h-4 text-blue-400"></i> Revenue Trends & Monthly Billing
+                                </h2>
+                                <span class="text-xs text-slate-400 bg-navy-800 px-3 py-1 rounded-full border border-slate-700">FY 2026-27</span>
+                            </div>
+                            <div class="h-64">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Status Breakdown Doughnut -->
+                        <div class="glass-card rounded-xl p-5 flex flex-col justify-between">
+                            <div>
+                                <h2 class="font-semibold text-white mb-4 flex items-center gap-2">
+                                    <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i> Invoice Settlement Ratios
+                                </h2>
+                                <div class="h-48 relative flex items-center justify-center">
+                                    <canvas id="statusChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center pt-4 border-t border-slate-800">
+                                <div>
+                                    <p class="text-xs text-slate-400">Paid</p>
+                                    <p class="text-sm font-bold text-emerald-400">74%</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Pending</p>
+                                    <p class="text-sm font-bold text-amber-400">20%</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-400">Overdue</p>
+                                    <p class="text-sm font-bold text-rose-400">6%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: CUSTOMERS DIRECTORY VIEW -->
+                <div id="tab-content-customers" class="space-y-4 hidden">
+                    <div class="glass-card rounded-xl p-5">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                            <div>
+                                <h2 class="text-lg font-bold text-white">Customer & Client Directory</h2>
+                                <p class="text-xs text-slate-400">Corporate profiles, GSTIN tax identifiers, and service scopes</p>
+                            </div>
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <input type="text" id="customer-search" oninput="filterCustomers()" placeholder="Filter client name or GSTIN..." class="bg-navy-800 border border-slate-700/70 text-xs px-3 py-2 rounded-lg text-slate-200 focus:outline-none focus:border-blue-400 w-full sm:w-60">
+                                <button onclick="openModal('addCustomerModal')" class="bg-blue-600/20 border border-blue-500/40 text-blue-400 hover:bg-blue-600/30 text-xs font-semibold px-3 py-2 rounded-lg transition-all whitespace-nowrap">
+                                    + Add Client
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-navy-800/80 uppercase tracking-wider text-slate-400 border-b border-slate-700">
+                                    <tr>
+                                        <th class="p-3">Company Entity</th>
+                                        <th class="p-3">GSTIN / Tax ID</th>
+                                        <th class="p-3">Primary Contact</th>
+                                        <th class="p-3">Service Scope</th>
+                                        <th class="p-3">Account Status</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customer-table-body" class="divide-y divide-slate-800">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: INVOICES & BILLING LEDGER -->
+                <div id="tab-content-invoices" class="space-y-4 hidden">
+                    <div class="glass-card rounded-xl p-5">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                            <div>
+                                <h2 class="text-lg font-bold text-white">Billing & Invoicing Ledger</h2>
+                                <p class="text-xs text-slate-400">Itemized billing records, tax calculations, and status updates</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <select id="invoice-status-filter" onchange="filterInvoices()" class="bg-navy-800 border border-slate-700 text-xs px-3 py-2 rounded-lg text-slate-200 focus:outline-none focus:border-blue-400">
+                                    <option value="ALL">All Statuses</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Overdue">Overdue</option>
+                                </select>
+                                <button onclick="switchTab('create-inv-tab')" class="brand-logo-icon hover:opacity-90 text-white font-medium text-xs px-3 py-2 rounded-lg transition-all">
+                                    + Generate Invoice
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-navy-800/80 uppercase tracking-wider text-slate-400 border-b border-slate-700">
+                                    <tr>
+                                        <th class="p-3">Invoice #</th>
+                                        <th class="p-3">Client Entity</th>
+                                        <th class="p-3">Issue Date</th>
+                                        <th class="p-3">Due Date</th>
+                                        <th class="p-3">Total Amount</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoice-table-body" class="divide-y divide-slate-800">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: GENERATE LATEST INVOICE STUDIO VIEW -->
+                <div id="tab-content-create-inv-tab" class="space-y-6 hidden">
+                    <div class="glass-card rounded-xl p-6">
+                        <div class="border-b border-slate-800 pb-4 mb-6 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="file-plus-2" class="w-5 h-5 text-blue-400"></i> Generate Latest Invoice Studio
+                                </h2>
+                                <p class="text-xs text-slate-400">Build custom itemized invoices with live tax rates, terms, and currency conversions</p>
+                            </div>
+                            <button onclick="resetInvoiceStudio()" class="bg-navy-800 hover:bg-navy-700 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Form
+                            </button>
+                        </div>
+
+                        <form onsubmit="handleInvoiceStudioSubmit(event)" class="space-y-6">
+                            <!-- Invoice Header Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-navy-900/60 p-4 rounded-xl border border-slate-800">
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Invoice Number (Auto Generated)</label>
+                                    <input type="text" id="studio-inv-number" readonly class="w-full bg-navy-950 border border-slate-700 rounded-lg p-2.5 text-xs text-blue-400 font-mono font-bold focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Select Client *</label>
+                                    <select id="studio-inv-client" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
+                                        <!-- JS Populated -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Currency Standard *</label>
+                                    <select id="studio-inv-currency" onchange="calculateStudioTotals()" class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
+                                        <option value="USD">$ USD - US Dollar</option>
+                                        <option value="INR">₹ INR - Indian Rupee</option>
+                                        <option value="EUR">€ EUR - Euro</option>
+                                        <option value="GBP">£ GBP - British Pound</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Issue Date *</label>
+                                    <input type="date" id="studio-inv-issue-date" required onchange="updateStudioDueDate()" class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Payment Terms</label>
+                                    <select id="studio-inv-terms" onchange="updateStudioDueDate()" class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
+                                        <option value="15">Net 15 Days</option>
+                                        <option value="30" selected>Net 30 Days</option>
+                                        <option value="60">Net 60 Days</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Calculated Due Date</label>
+                                    <input type="date" id="studio-inv-due-date" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Line Items Section -->
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="font-bold text-sm text-slate-200">Billable Line Items & Deliverables</h3>
+                                    <button type="button" onclick="addStudioLineItem()" class="bg-blue-600/20 border border-blue-500/40 text-blue-400 hover:bg-blue-600/30 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Line Item
+                                    </button>
+                                </div>
+
+                                <div class="space-y-2" id="studio-line-items-container">
+                                    <!-- Items Injected by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Live Calculations & Notes -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Payment Instructions & Terms</label>
+                                    <textarea id="studio-inv-notes" rows="3" class="w-full bg-navy-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none focus:border-blue-400" placeholder="Wire Transfer to KPI Tech Corp Escrow Account. SWIFT: KPITUS33..."></textarea>
+                                </div>
+
+                                <div class="p-4 bg-navy-900/80 rounded-xl border border-slate-700/60 space-y-3">
+                                    <div class="flex justify-between text-xs text-slate-400">
+                                        <span>Subtotal:</span>
+                                        <span id="studio-calc-subtotal" class="font-semibold text-slate-200">$0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-slate-400 items-center">
+                                        <span class="flex items-center gap-2">
+                                            Tax Rate:
+                                            <select id="studio-calc-tax-rate" onchange="calculateStudioTotals()" class="bg-navy-950 border border-slate-700 rounded px-2 py-0.5 text-xs text-blue-400">
+                                                <option value="0.18">18% GST / VAT (Standard Services)</option>
+                                                <option value="0.12">12% GST (Software Subscriptions)</option>
+                                                <option value="0.00">0% GST (Export / Exempt)</option>
+                                            </select>
+                                        </span>
+                                        <span id="studio-calc-tax-val" class="font-semibold text-slate-200">$0.00</span>
+                                    </div>
+                                    <div class="pt-3 border-t border-slate-700 flex justify-between text-sm font-bold">
+                                        <span class="text-white">Total Amount Due:</span>
+                                        <span id="studio-calc-total" class="text-blue-400 text-lg">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                                <button type="button" onclick="switchTab('invoices')" class="px-5 py-2.5 bg-navy-800 text-slate-300 text-xs rounded-xl font-medium">Cancel</button>
+                                <button type="submit" class="px-6 py-2.5 brand-logo-icon hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2">
+                                    <i data-lucide="printer" class="w-4 h-4"></i> Generate & Open PDF View
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- VIEW 5: USER MANAGEMENT MODULE -->
+                <div id="tab-content-users" class="space-y-4 hidden">
+                    <div class="glass-card rounded-xl p-5">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                            <div>
+                                <h2 class="text-lg font-bold text-white">System User Management</h2>
+                                <p class="text-xs text-slate-400">Manage portal access credentials, security roles, and password resets</p>
+                            </div>
+                            <button onclick="openModal('addUserModal')" class="bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 text-xs font-semibold px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i> Add System User
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-navy-800/80 uppercase tracking-wider text-slate-400 border-b border-slate-700">
+                                    <tr>
+                                        <th class="p-3">User Name</th>
+                                        <th class="p-3">Email Address</th>
+                                        <th class="p-3">Role Context</th>
+                                        <th class="p-3">Account Status</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body" class="divide-y divide-slate-800">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 3. MODALS & POPUPS CONTAINER               -->
+    <!-- ========================================== -->
+
+    <!-- MODAL 1: ADD CLIENT -->
+    <div id="addCustomerModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-navy-900 border border-slate-700 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div class="p-4 bg-navy-800 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-blue-400"></i> Register Corporate Client</h3>
+                <button onclick="closeModal('addCustomerModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form onsubmit="handleCustomerSubmit(event)" class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Company Name *</label>
+                    <input type="text" id="cust-name" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-400 focus:outline-none" placeholder="e.g. Apex Cloud Solutions LLC">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">GSTIN / Tax Registration *</label>
+                        <input type="text" id="cust-gstin" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-400 focus:outline-none" placeholder="27AABCU9603R1ZM">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Service Scope</label>
+                        <select id="cust-scope" class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-400 focus:outline-none">
+                            <option>Cloud Infrastructure Management</option>
+                            <option>Enterprise ERP Consulting</option>
+                            <option>Cybersecurity Retainer</option>
+                            <option>Custom Software Development</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Primary Contact Person</label>
+                        <input type="text" id="cust-contact" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-400 focus:outline-none" placeholder="David Vance">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Contact Email</label>
+                        <input type="email" id="cust-email" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-400 focus:outline-none" placeholder="billing@apexcloud.com">
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addCustomerModal')" class="px-4 py-2 bg-navy-800 text-slate-300 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 brand-logo-icon text-white font-semibold rounded-lg shadow-md">Save Client Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD USER MODAL -->
+    <div id="addUserModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-navy-900 border border-slate-700 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="p-4 bg-navy-800 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-4 h-4 text-purple-400"></i> Add System User</h3>
+                <button onclick="closeModal('addUserModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form onsubmit="handleUserSubmit(event)" class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Full Name *</label>
+                    <input type="text" id="user-name-input" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-purple-400 focus:outline-none" placeholder="e.g. Jordan Lee">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Corporate Email *</label>
+                    <input type="email" id="user-email-input" required class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-purple-400 focus:outline-none" placeholder="j.lee@kpitech.com">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Assigned Security Role *</label>
+                    <select id="user-role-input" class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-purple-400 focus:outline-none">
+                        <option value="Finance Manager">Finance Manager</option>
+                        <option value="Sales Lead">Sales Lead</option>
+                        <option value="DevOps Lead">DevOps Lead</option>
+                        <option value="Administrator">Administrator</option>
+                    </select>
+                </div>
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addUserModal')" class="px-4 py-2 bg-navy-800 text-slate-300 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg shadow-md">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: RECORD PAYMENT LEDGER MODAL -->
+    <div id="payInvoiceModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-navy-900 border border-slate-700 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="p-4 bg-navy-800 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4 text-emerald-400"></i> Record Invoice Settlement</h3>
+                <button onclick="closeModal('payInvoiceModal')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form onsubmit="handlePaymentSubmit(event)" class="p-5 space-y-4 text-xs">
+                <input type="hidden" id="pay-invoice-id">
+                <div class="p-3 bg-navy-800 rounded-lg border border-slate-700 space-y-1">
+                    <p class="text-slate-400">Invoice Reference: <span id="pay-modal-invnum" class="text-white font-bold"></span></p>
+                    <p class="text-slate-400">Client: <span id="pay-modal-client" class="text-white"></span></p>
+                    <p class="text-slate-400">Total Outstanding: <span id="pay-modal-due" class="text-emerald-400 font-bold"></span></p>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Payment Gateway / Channel</label>
+                    <select id="pay-gateway-channel" class="w-full bg-navy-800 border border-slate-700 rounded-lg p-2.5 text-white focus:border-emerald-400 focus:outline-none">
+                        <option value="Stripe API">Stripe Online API</option>
+                        <option value="Razorpay UPI">Razorpay UPI & NetBanking</option>
+                        <option value="Bank Wire">Direct SWIFT / Bank Wire Transfer</option>
+                    </select>
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('payInvoiceModal')" class="px-4 py-2 bg-navy-800 text-slate-300 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg shadow-md flex items-center gap-1">
+                        <i data-lucide="check" class="w-4 h-4"></i> Confirm Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: VIEW & PRINT OFFICIAL CORPORATE INVOICE -->
+    <div id="viewInvoiceModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-navy-900 border border-slate-700 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            <div class="p-4 bg-navy-800 border-b border-slate-700 flex justify-between items-center no-print">
+                <h3 class="font-bold text-white flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i> Official Printable Invoice View
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="brand-logo-icon hover:opacity-90 text-white font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print / Save PDF
+                    </button>
+                    <button onclick="closeModal('viewInvoiceModal')" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <!-- PRINTABLE INVOICE BODY -->
+            <div id="printable-invoice-area" class="p-8 space-y-6 overflow-y-auto bg-slate-900 text-slate-100">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-navy-800 border border-blue-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+        <span id="toast-message" class="text-xs font-medium">Operation completed successfully.</span>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 4. LOGIC ENGINE & LOCAL STATE               -->
+    <!-- ========================================== -->
+    <script>
+        // AUTH SESSION STATE
+        let currentSessionUser = null;
+
+        // CRM DATA STORES
+        let users = [
+            { id: 'USR-101', name: 'Alex Morgan', email: 'a.morgan@kpitech.com', role: 'Administrator', status: 'Active' },
+            { id: 'USR-102', name: 'Sarah Jenkins', email: 's.jenkins@kpitech.com', role: 'Finance Manager', status: 'Active' },
+            { id: 'USR-103', name: 'David Vance', email: 'd.vance@kpitech.com', role: 'Sales Lead', status: 'Active' },
+            { id: 'USR-104', name: 'Elena Rostova', email: 'e.rostova@kpitech.com', role: 'DevOps Lead', status: 'Inactive' }
+        ];
+
+        let customers = [
+            { id: 'CUST-101', name: 'Nvidia Corp Enterprise', gstin: '27AABCN1234R1ZP', contact: 'Mark Sterling', email: 'billing@nvidia.com', scope: 'Cloud Infrastructure Management', status: 'Active' },
+            { id: 'CUST-102', name: 'TATA Consultancy Systems', gstin: '27AAACT9876Q1ZO', contact: 'Priya Sharma', email: 'accounts@tcs.com', scope: 'Enterprise ERP Consulting', status: 'Active' },
+            { id: 'CUST-103', name: 'Quantum Leap Security', gstin: '07AAACQ5544R2ZT', contact: 'Alex Rivera', email: 'finance@quantumleap.io', scope: 'Cybersecurity Retainer', status: 'Active' },
+            { id: 'CUST-104', name: 'BioHealth Tech Global', gstin: '29AABCB3322M1ZX', contact: 'Dr. Sarah Connor', email: 'billing@biohealth.org', scope: 'Custom Software Development', status: 'Active' }
+        ];
+
+        let invoices = [
+            { id: 'KPI-2026-101', customerId: 'CUST-101', customerName: 'Nvidia Corp Enterprise', issueDate: '2026-09-15', dueDate: '2026-10-15', subtotal: 45000, tax: 8100, total: 53100, status: 'Paid', currency: 'USD', symbol: '$', items: [{ desc: 'Enterprise Cloud Management Sub - Q3', qty: 1, price: 45000 }] },
+            { id: 'KPI-2026-102', customerId: 'CUST-102', customerName: 'TATA Consultancy Systems', issueDate: '2026-10-01', dueDate: '2026-10-31', subtotal: 28000, tax: 5040, total: 33040, status: 'Pending', currency: 'USD', symbol: '$', items: [{ desc: 'SAP ERP Migration Phase II Consulting', qty: 1, price: 28000 }] },
+            { id: 'KPI-2026-103', customerId: 'CUST-103', customerName: 'Quantum Leap Security', issueDate: '2026-08-10', dueDate: '2026-09-10', subtotal: 15000, tax: 2700, total: 17700, status: 'Overdue', currency: 'USD', symbol: '$', items: [{ desc: 'Annual Infrastructure Penetration Audit', qty: 1, price: 15000 }] }
+        ];
+
+        // INIT HANDLER
+        window.onload = function() {
+            lucide.createIcons();
+            if (!currentSessionUser) {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('main-portal').classList.add('hidden');
+            }
+        };
+
+        // AUTHENTICATION HANDLERS
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const role = document.getElementById('login-role').value;
+            const name = email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+            currentSessionUser = {
+                name: name || 'Alex Morgan',
+                email: email,
+                role: role
+            };
+
+            // Update Header Profile
+            document.getElementById('user-display-name').innerText = currentSessionUser.name;
+            document.getElementById('user-display-role').innerText = currentSessionUser.role;
+            const initials = currentSessionUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('user-avatar').innerText = initials;
+
+            // Display Portal Screen
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-portal').classList.remove('hidden');
+
+            // Render Views
+            renderCustomersTable();
+            renderInvoicesTable();
+            renderUsersTable();
+            populateClientDropdowns();
+            initCharts();
+            resetInvoiceStudio();
+
+            showToast(`Welcome back, ${currentSessionUser.name} (${role})`);
+        }
+
+        function handleLogout() {
+            currentSessionUser = null;
+            document.getElementById('main-portal').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            showToast("Authenticated session ended.");
+        }
+
+        function toggleForgotPassword(show) {
+            if (show) {
+                document.getElementById('login-card').classList.add('hidden');
+                document.getElementById('forgot-card').classList.remove('hidden');
+            } else {
+                document.getElementById('forgot-card').classList.add('hidden');
+                document.getElementById('login-card').classList.remove('hidden');
+            }
+        }
+
+        function handleForgotPasswordSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value;
+            showToast(`Password reset link & secure token dispatched to ${email}`);
+            toggleForgotPassword(false);
+        }
+
+        // TAB NAVIGATION
+        function switchTab(tab) {
+            ['dashboard', 'customers', 'invoices', 'create-inv-tab', 'users'].forEach(t => {
+                const el = document.getElementById(`tab-content-${t}`);
+                const nav = document.getElementById(`nav-${t}`);
+                if (t === tab) {
+                    if (el) el.classList.remove('hidden');
+                    if (nav) nav.className = 'tab-active flex items-center gap-3 px-4 py-3 text-sm rounded-r-xl transition-all hover:text-white';
+                } else {
+                    if (el) el.classList.add('hidden');
+                    if (nav) nav.className = 'flex items-center gap-3 px-4 py-3 text-sm text-slate-400 hover:bg-navy-800 rounded-r-xl transition-all hover:text-white';
+                }
+            });
+        }
+
+        // INVOICE STUDIO LOGIC
+        function resetInvoiceStudio() {
+            const nextId = `KPI-2026-${100 + invoices.length + 1}`;
+            document.getElementById('studio-inv-number').value = nextId;
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('studio-inv-issue-date').value = today;
+            updateStudioDueDate();
+
+            const container = document.getElementById('studio-line-items-container');
+            container.innerHTML = '';
+            addStudioLineItem('DevOps Automation Pipeline & Enterprise Cloud Setup', 1, 14500);
+            calculateStudioTotals();
+        }
+
+        function updateStudioDueDate() {
+            const issueDateVal = document.getElementById('studio-inv-issue-date').value;
+            const termsDays = parseInt(document.getElementById('studio-inv-terms').value) || 30;
+            if (issueDateVal) {
+                const issueDate = new Date(issueDateVal);
+                issueDate.setDate(issueDate.getDate() + termsDays);
+                document.getElementById('studio-inv-due-date').value = issueDate.toISOString().split('T')[0];
+            }
+        }
+
+        function addStudioLineItem(defaultDesc = '', defaultQty = 1, defaultPrice = 1000) {
+            const container = document.getElementById('studio-line-items-container');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-12 gap-2 items-center studio-line-row bg-navy-900/40 p-2 rounded-lg border border-slate-800';
+            row.innerHTML = `
+                <input type="text" placeholder="Service description / deliverable" value="${defaultDesc}" required class="col-span-6 bg-navy-800 border border-slate-700 rounded p-2 text-xs text-white item-desc focus:outline-none focus:border-blue-400">
+                <input type="number" placeholder="Qty" value="${defaultQty}" min="1" oninput="calculateStudioTotals()" required class="col-span-2 bg-navy-800 border border-slate-700 rounded p-2 text-xs text-white item-qty focus:outline-none focus:border-blue-400">
+                <input type="number" placeholder="Price" value="${defaultPrice}" min="0" step="0.01" oninput="calculateStudioTotals()" required class="col-span-3 bg-navy-800 border border-slate-700 rounded p-2 text-xs text-white item-price focus:outline-none focus:border-blue-400">
+                <button type="button" onclick="removeStudioLineItem(this)" class="col-span-1 text-slate-500 hover:text-rose-400 text-center"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+            `;
+            container.appendChild(row);
+            lucide.createIcons();
+            calculateStudioTotals();
+        }
+
+        function removeStudioLineItem(btn) {
+            const rows = document.querySelectorAll('.studio-line-row');
+            if (rows.length > 1) {
+                btn.closest('.studio-line-row').remove();
+                calculateStudioTotals();
+            } else {
+                showToast("Invoice requires at least one line item.");
+            }
+        }
+
+        function getCurrencySymbol(code) {
+            switch(code) {
+                case 'INR': return '₹';
+                case 'EUR': return '€';
+                case 'GBP': return '£';
+                default: return '$';
+            }
+        }
+
+        function calculateStudioTotals() {
+            const rows = document.querySelectorAll('.studio-line-row');
+            let subtotal = 0;
+            rows.forEach(r => {
+                const qty = parseFloat(r.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(r.querySelector('.item-price').value) || 0;
+                subtotal += qty * price;
+            });
+            const taxRate = parseFloat(document.getElementById('studio-calc-tax-rate').value) || 0;
+            const tax = subtotal * taxRate;
+            const total = subtotal + tax;
+            const currCode = document.getElementById('studio-inv-currency').value;
+            const sym = getCurrencySymbol(currCode);
+
+            document.getElementById('studio-calc-subtotal').innerText = `${sym}${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('studio-calc-tax-val').innerText = `${sym}${tax.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('studio-calc-total').innerText = `${sym}${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        function handleInvoiceStudioSubmit(e) {
+            e.preventDefault();
+            const invId = document.getElementById('studio-inv-number').value;
+            const clientId = document.getElementById('studio-inv-client').value;
+            const clientObj = customers.find(c => c.id === clientId) || { name: 'Corporate Enterprise Client' };
+
+            const rows = document.querySelectorAll('.studio-line-row');
+            let items = [];
+            let subtotal = 0;
+            rows.forEach(r => {
+                const desc = r.querySelector('.item-desc').value;
+                const qty = parseFloat(r.querySelector('.item-qty').value) || 1;
+                const price = parseFloat(r.querySelector('.item-price').value) || 0;
+                items.push({ desc, qty, price });
+                subtotal += qty * price;
+            });
+
+            const taxRate = parseFloat(document.getElementById('studio-calc-tax-rate').value);
+            const tax = subtotal * taxRate;
+            const total = subtotal + tax;
+            const currency = document.getElementById('studio-inv-currency').value;
+            const symbol = getCurrencySymbol(currency);
+
+            const newInv = {
+                id: invId,
+                customerId: clientId,
+                customerName: clientObj.name,
+                issueDate: document.getElementById('studio-inv-issue-date').value,
+                dueDate: document.getElementById('studio-inv-due-date').value,
+                subtotal,
+                tax,
+                total,
+                status: 'Pending',
+                currency,
+                symbol,
+                items
+            };
+
+            invoices.unshift(newInv);
+            renderInvoicesTable();
+            showToast(`Generated Invoice ${newInv.id} for ${clientObj.name}`);
+            
+            viewInvoiceDetails(newInv.id);
+            resetInvoiceStudio();
+        }
+
+        // PRINTABLE INVOICE VIEW
+        function viewInvoiceDetails(invId) {
+            const inv = invoices.find(i => i.id === invId);
+            if(!inv) return;
+            const client = customers.find(c => c.id === inv.customerId) || {};
+            const sym = inv.symbol || '$';
+
+            let itemsRows = inv.items.map(it => `
+                <tr class="border-b border-slate-700/60 print-border">
+                    <td class="py-3 px-2 font-medium text-slate-200 print-text-dark">${it.desc}</td>
+                    <td class="py-3 px-2 text-center text-slate-400 print-text-dark">${it.qty}</td>
+                    <td class="py-3 px-2 text-right text-slate-400 print-text-dark">${sym}${it.price.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                    <td class="py-3 px-2 text-right font-bold text-white print-text-dark">${sym}${(it.qty * it.price).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                </tr>
+            `).join('');
+
+            const printableArea = document.getElementById('printable-invoice-area');
+            printableArea.innerHTML = `
+                <div class="flex justify-between items-start border-b border-slate-700 pb-6 print-border">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl brand-logo-icon flex items-center justify-center shrink-0">
+                                <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-extrabold tracking-wider text-white print-text-dark leading-none">KPI <span class="tech-gradient-text">TECH</span></h2>
+                                <p class="text-[10px] text-slate-400 font-semibold tracking-[0.25em] uppercase mt-1 print-text-muted">CORPORATION</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 print-text-muted">77 Technology Parkway, Sector 62, Silicon Park</p>
+                        <p class="text-xs text-slate-400 print-text-muted">GSTIN / Tax ID: 27AAACK1001P1Z5 • Support: billing@kpitech.com</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-3 py-1 bg-navy-800 text-blue-400 font-mono font-bold text-lg rounded-lg border border-slate-700 print-border print-text-dark">${inv.id}</span>
+                        <p class="text-xs text-slate-400 mt-2 print-text-muted"><strong>Issue Date:</strong> ${inv.issueDate}</p>
+                        <p class="text-xs text-slate-400 print-text-muted"><strong>Payment Due:</strong> ${inv.dueDate}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 my-6 p-4 bg-navy-800/40 rounded-xl border border-slate-800 print-bg-light print-border">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 print-text-muted">Billed Corporate Entity</p>
+                        <h3 class="text-sm font-bold text-white mt-1 print-text-dark">${inv.customerName}</h3>
+                        <p class="text-xs text-slate-400 print-text-muted">GSTIN: ${client.gstin || 'N/A'}</p>
+                        <p class="text-xs text-slate-400 print-text-muted">Attn: ${client.contact || 'Accounts Payable'}</p>
+                        <p class="text-xs text-slate-400 print-text-muted">${client.email || ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 print-text-muted">Settlement Status</p>
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold border ${inv.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border-amber-500/40'}">
+                            ${inv.status.toUpperCase()}
+                        </span>
+                        <p class="text-xs text-slate-400 mt-2 print-text-muted">Currency: ${inv.currency || 'USD'}</p>
+                    </div>
+                </div>
+
+                <table class="w-full text-left text-xs my-6">
+                    <thead class="bg-navy-800 uppercase text-[10px] text-slate-400 border-b border-slate-700 print-bg-light print-border print-text-dark">
+                        <tr>
+                            <th class="py-2.5 px-2">Deliverable / Service Item</th>
+                            <th class="py-2.5 px-2 text-center">Qty</th>
+                            <th class="py-2.5 px-2 text-right">Unit Price</th>
+                            <th class="py-2.5 px-2 text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsRows}
+                    </tbody>
+                </table>
+
+                <div class="flex flex-col sm:flex-row justify-between items-start gap-6 pt-4 border-t border-slate-700 print-border">
+                    <div class="text-xs text-slate-400 space-y-1 max-w-sm print-text-muted">
+                        <p class="font-bold text-slate-300 print-text-dark">Wire & Settlement Instructions:</p>
+                        <p>Bank: Silicon Commercial Bank • Branch: Enterprise Center</p>
+                        <p>Account No: 9980-4410-2210 • SWIFT: SCBLUS33XXX</p>
+                    </div>
+
+                    <div class="w-full sm:w-64 space-y-2 text-xs">
+                        <div class="flex justify-between text-slate-400 print-text-muted">
+                            <span>Subtotal:</span>
+                            <span class="font-medium">${sym}${inv.subtotal.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400 print-text-muted">
+                            <span>GST / Regional Tax:</span>
+                            <span class="font-medium">${sym}${inv.tax.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-white pt-2 border-t border-slate-700 print-border print-text-dark">
+                            <span>Total Amount:</span>
+                            <span class="text-blue-400 print-text-dark">${sym}${inv.total.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            openModal('viewInvoiceModal');
+        }
+
+        // USER MANAGEMENT FUNCTIONS
+        function renderUsersTable() {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-navy-800/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-white">${u.name}</td>
+                    <td class="p-3 text-slate-400">${u.email}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                            ${u.role}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${u.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700/50 text-slate-400 border border-slate-600'}">
+                            ${u.status}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right space-x-2">
+                        <button onclick="triggerResetUserPassword('${u.id}')" class="text-purple-400 hover:text-purple-300 font-medium text-xs" title="Reset Password">
+                            <i data-lucide="key-round" class="w-3.5 h-3.5 inline"></i> Reset Pass
+                        </button>
+                        <button onclick="toggleUserStatus('${u.id}')" class="text-slate-400 hover:text-white font-medium text-xs">
+                            ${u.status === 'Active' ? 'Disable' : 'Enable'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+            document.getElementById('stat-users-count').innerText = users.filter(u => u.status === 'Active').length;
+        }
+
+        function handleUserSubmit(e) {
+            e.preventDefault();
+            const newUser = {
+                id: `USR-${Math.floor(100 + Math.random() * 900)}`,
+                name: document.getElementById('user-name-input').value,
+                email: document.getElementById('user-email-input').value,
+                role: document.getElementById('user-role-input').value,
+                status: 'Active'
+            };
+            users.push(newUser);
+            renderUsersTable();
+            closeModal('addUserModal');
+            showToast(`User account created for ${newUser.name}`);
+            e.target.reset();
+        }
+
+        function triggerResetUserPassword(userId) {
+            const u = users.find(x => x.id === userId);
+            if (u) {
+                showToast(`Password reset link dispatched to ${u.email}`);
+            }
+        }
+
+        function toggleUserStatus(userId) {
+            const u = users.find(x => x.id === userId);
+            if (u) {
+                u.status = u.status === 'Active' ? 'Inactive' : 'Active';
+                renderUsersTable();
+                showToast(`User ${u.name} set to ${u.status}`);
+            }
+        }
+
+        // CUSTOMER FUNCTIONS
+        function renderCustomersTable(data = customers) {
+            const tbody = document.getElementById('customer-table-body');
+            tbody.innerHTML = '';
+            data.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-navy-800/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-white">${c.name}</td>
+                    <td class="p-3 font-mono text-blue-400">${c.gstin}</td>
+                    <td class="p-3">
+                        <div class="text-slate-200">${c.contact}</div>
+                        <div class="text-[10px] text-slate-500">${c.email}</div>
+                    </td>
+                    <td class="p-3 text-slate-400">${c.scope}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            ${c.status}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="quickInvoiceForClient('${c.id}')" class="text-blue-400 hover:text-white font-medium hover:underline text-xs">Issue Invoice</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('stat-clients-count').innerText = customers.length;
+        }
+
+        function handleCustomerSubmit(e) {
+            e.preventDefault();
+            const newCust = {
+                id: `CUST-${Math.floor(100 + Math.random() * 900)}`,
+                name: document.getElementById('cust-name').value,
+                gstin: document.getElementById('cust-gstin').value,
+                contact: document.getElementById('cust-contact').value,
+                email: document.getElementById('cust-email').value,
+                scope: document.getElementById('cust-scope').value,
+                status: 'Active'
+            };
+            customers.push(newCust);
+            renderCustomersTable();
+            populateClientDropdowns();
+            closeModal('addCustomerModal');
+            showToast(`Registered corporate client: ${newCust.name}`);
+            e.target.reset();
+        }
+
+        function quickInvoiceForClient(custId) {
+            switchTab('create-inv-tab');
+            document.getElementById('studio-inv-client').value = custId;
+        }
+
+        function populateClientDropdowns() {
+            const select = document.getElementById('studio-inv-client');
+            select.innerHTML = '';
+            customers.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.name} (${c.gstin})</option>`;
+            });
+        }
+
+        // INVOICES & PAYMENTS LEDGER
+        function renderInvoicesTable(data = invoices) {
+            const tbody = document.getElementById('invoice-table-body');
+            tbody.innerHTML = '';
+            let pendingVal = 0;
+            let pendingCount = 0;
+
+            data.forEach(inv => {
+                let badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+                if (inv.status === 'Paid') badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                if (inv.status === 'Overdue') {
+                    badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+                    pendingVal += inv.total;
+                    pendingCount++;
+                }
+                if (inv.status === 'Pending') {
+                    pendingVal += inv.total;
+                    pendingCount++;
+                }
+
+                const sym = inv.symbol || '$';
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-navy-800/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-blue-400">${inv.id}</td>
+                    <td class="p-3 font-medium text-white">${inv.customerName}</td>
+                    <td class="p-3 text-slate-400">${inv.issueDate}</td>
+                    <td class="p-3 text-slate-400">${inv.dueDate}</td>
+                    <td class="p-3 font-bold text-white">${sym}${inv.total.toLocaleString()}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badgeClass}">
+                            ${inv.status}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right space-x-2">
+                        <button onclick="viewInvoiceDetails('${inv.id}')" class="text-blue-400 hover:text-white" title="Printable Invoice View"><i data-lucide="printer" class="w-3.5 h-3.5 inline"></i></button>
+                        ${inv.status !== 'Paid' ? `<button onclick="openPayModal('${inv.id}')" class="text-emerald-400 hover:text-emerald-300 font-semibold"><i data-lucide="credit-card" class="w-3.5 h-3.5 inline mr-1"></i>Pay</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+
+            document.getElementById('stat-pending-val').innerText = `$${pendingVal.toLocaleString()}`;
+            document.getElementById('stat-pending-count').innerText = pendingCount;
+        }
+
+        function openPayModal(invId) {
+            const inv = invoices.find(i => i.id === invId);
+            if (!inv) return;
+            const sym = inv.symbol || '$';
+            document.getElementById('pay-invoice-id').value = inv.id;
+            document.getElementById('pay-modal-invnum').innerText = inv.id;
+            document.getElementById('pay-modal-client').innerText = inv.customerName;
+            document.getElementById('pay-modal-due').innerText = `${sym}${inv.total.toLocaleString()}`;
+            openModal('payInvoiceModal');
+        }
+
+        function handlePaymentSubmit(e) {
+            e.preventDefault();
+            const invId = document.getElementById('pay-invoice-id').value;
+            const inv = invoices.find(i => i.id === invId);
+            const channel = document.getElementById('pay-gateway-channel').value;
+            
+            if (inv) {
+                inv.status = 'Paid';
+                renderInvoicesTable();
+                closeModal('payInvoiceModal');
+                showToast(`Payment of $${inv.total.toLocaleString()} settled via ${channel}`);
+            }
+        }
+
+        function filterCustomers() {
+            const q = document.getElementById('customer-search').value.toLowerCase();
+            const filtered = customers.filter(c => c.name.toLowerCase().includes(q) || c.gstin.toLowerCase().includes(q));
+            renderCustomersTable(filtered);
+        }
+
+        function filterInvoices() {
+            const status = document.getElementById('invoice-status-filter').value;
+            if (status === 'ALL') {
+                renderInvoicesTable(invoices);
+            } else {
+                const filtered = invoices.filter(i => i.status === status);
+                renderInvoicesTable(filtered);
+            }
+        }
+
+        function handleGlobalSearch(q) {
+            q = q.toLowerCase();
+            if (!q) {
+                renderCustomersTable();
+                renderInvoicesTable();
+                renderUsersTable();
+                return;
+            }
+            renderCustomersTable(customers.filter(c => c.name.toLowerCase().includes(q) || c.gstin.toLowerCase().includes(q)));
+            renderInvoicesTable(invoices.filter(i => i.id.toLowerCase().includes(q) || i.customerName.toLowerCase().includes(q)));
+            renderUsersTable(users.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        function initCharts() {
+            const ctx1 = document.getElementById('revenueChart');
+            if (ctx1) {
+                new Chart(ctx1.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                        datasets: [{
+                            label: 'Gross Revenue ($)',
+                            data: [195000, 240000, 210000, 285000, 310000, 392900],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8' } },
+                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8' } }
+                        }
+                    }
+                });
+            }
+
+            const ctx2 = document.getElementById('statusChart');
+            if (ctx2) {
+                new Chart(ctx2.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Paid', 'Pending', 'Overdue'],
+                        datasets: [{
+                            data: [74, 20, 6],
+                            backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        cutout: '70%'
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
